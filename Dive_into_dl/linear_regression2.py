@@ -5,6 +5,7 @@ import pandas
 import matplotlib.pyplot as p
 from torch.utils import data
 from torch import nn
+#from d2l import torch as d2l
 
 def synthetic_data(w,b,num_example): # return X,y
     X = torch.normal(0,1,(num_example,len(w))) # X is a matrix with the size of num_example * len(w)
