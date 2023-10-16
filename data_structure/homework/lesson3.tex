@@ -3,7 +3,37 @@
 \title{Lesson3 Practice}
 \author{221900363 肖逸飞}
 
+\usepackage{listings}
+\usepackage{xcolor}
+\definecolor{commentgreen}{RGB}{2,112,10}
+\definecolor{eminence}{RGB}{108,48,130}
+\definecolor{weborange}{RGB}{255,165,0}
+\definecolor{frenchplum}{RGB}{129,20,83}
+
+
 \begin{document}
+
+\lstset {
+    language=C++,
+    frame=tb,
+    tabsize=4,
+    showstringspaces=false,
+    numbers=left,
+    %upquote=true,
+    commentstyle=\color{commentgreen},
+    keywordstyle=\color{eminence},
+    stringstyle=\color{red},
+    basicstyle=\small\ttfamily, % basic font setting
+    emph={int,char,double,float,unsigned,void,bool},
+    emphstyle={\color{blue}},
+    escapechar=\&,
+    % keyword highlighting
+    classoffset=1, % starting new class
+    otherkeywords={>,<,.,;,-,!,=,~},
+    morekeywords={>,<,.,;,-,!,=,~},
+    keywordstyle=\color{weborange},
+    classoffset=0,
+}
 
 \maketitle
 
@@ -16,21 +46,43 @@
 \\ (7) q->link = first->link
 \\ (8) first->link = q
 
-\\2.(1)AB*C*
+2.(1)AB*C*
 \\ (2)BA-C-D+
 \\ (3)0B-A*C+
 \\ (4)AB+D*EFAD*+/+C+
-\\ (5)AB&&EF>!||
-\\ (6)ABC<CD>||!&&!CE<||
+\\ (5)AB\&\&EF>!||
+\\ (6)ABC<CD>||!\&\&!CE<||
 
-\\3.(1)132
+3.(1)132
 \\ (2)435612：不可以，因为在完成4356的出栈后1和2都在栈内，此时2必然在1之前出栈
 \\ 325641：可以，1进栈，2进栈，3进栈，3出栈，2出栈，4进栈，5进栈，5出栈，6进栈，6出栈，4出栈，1出栈
 \\ 154623：不可以，在完成1546之后2和3必然在栈内，此时3必然在2之前出栈
 \\ 135426：可以，1进栈，1出栈，2进栈，3进栈，3出栈，4进栈，5进栈，5出栈，4出栈，2出栈，6进栈，6出栈
 
-\\4.IOIIOOIIOIIOIIOOOO
+4.IOIIOOIIOIIOIIOOOO
 
-\\5.
+5.(1)
+
+\begin{lstlisting}
+    bool is_empty(){
+        return  count == 0;
+    }
+    void in(int x){
+        if(count < m){
+            q[(front+count)%m] = x;
+            count += 1;
+        }
+    }
+    int out(){
+        if(!is_empty()){
+            int res = q[front];
+            front = (front+1)%m;
+            count -= 1;
+            return res;
+        }
+    }
+\end{lstlisting}
+
+(2)m-1个
 
 \end{document}
