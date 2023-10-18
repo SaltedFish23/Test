@@ -50,7 +50,7 @@ def loss():
 def optimize():
     
 
-def train_epoch(net,train_iter,loss,updater):
+def train_epoch():
 
 
 def train():
