@@ -12,16 +12,65 @@ from IPython import display
 import visdom
 from torch.utils.data import TensorDataset, DataLoader
 
+def conv_block(input_channels,num_channels):
+    return nn.Sequential(
+        nn.BatchNorm2d(input_channels),
+        nn.ReLU(),
+        nn.Conv2d(input_channels,num_channels,kernel_size=3,padding=1)
+    )
 
-class classfier(nn.Module): #densenet, use batchnorm and relu
-    def __init__(self):
-        
+def transition_block(input_channels,num_channels):
+    return nn.Sequential(
+        nn.BatchNorm2d(input_channels),
+        nn.ReLU(),
+        nn.Conv2d(input_channels,num_channels,kernel_size=1),
+        nn.AvgPool2d(kernel_size=2,stride=2)
+    )
+
+
+class DenseBlock(nn.Module):
+    def __init__(self,num_convs,input_channels,num_channels):
+        super(DenseBlock, self).__init__()
+        layer = []
+        for i in range(num_convs):
+            layer.append(conv_block(
+                num_channels * i + input_channels, num_channels))
+        self.net = nn.Sequential(*layer)
         
     def forward(self,X):
-        
+        for blk in self.net:
+            Y = blk(X)
+            X = torch.cat((X,Y), dim = 1)
+        return X
+    
 
+def classifier(num_channels=64,growth_rate=32,num_output=10,num_convs_in_dense_block=[4,4,4,4]):
+    '''最终用于训练的模型，架构是dense net，前面的都是轮子'''
+    '''使用方法为： net = classifier(...)'''
+    blks = []
+    input_layer = nn.Sequential(
+        nn.Conv2d(1,64,kernel_size=7,stride=2,padding=3),
+        nn.BatchNorm2d(64),
+        nn.ReLU(),
+        nn.MaxPool2d(kernel_size=3,stride=2,padding=1)
+    )
+    for i,num_convs in enumerate(num_convs_in_dense_block):
+        blks.append(DenseBlock())
+        num_channels += num_convs*growth_rate
+        if i != len(num_convs_in_dense_block) - 1:
+            blks.append(transition_block(num_channels,num_channels//2))
+            num_channels = num_channels // 2
+    return nn.Sequential(
+        input_layer,
+        *blks,
+        nn.BatchNorm2d(num_channels),
+        nn.ReLU(),
+        nn.AdaptiveAvgPool2d((1,1)),
+        nn.Flatten(),
+        nn.Linear(num_channels,num_output)
+    )
 
-class accumulator:
+class accumulator: #轮子，用于记录训练中的loss和accuracy以便于可视化
     def __init__(self,n):
         self.data = [0.0]*n
         
@@ -34,7 +83,7 @@ class accumulator:
     def __getitem__(self,idx):
         return self.data[idx]
 
-class visualize(object):
+class visualize(object): #利用visdom实现loss,accuracy的可视化监控
     def __init__(self,env='default',**kwargs):
         self.vis = visdom.Visdom(env=env,**kwargs)
         self.index = {}
@@ -43,7 +92,7 @@ class visualize(object):
     def paint(self,train_loss,test_accuracy,train_accuracy,epochs):
         self.vis.line([[train_loss,test_accuracy,train_accuracy]],[epochs],win='train',update='append')
 
-def data_iter(data,labels,batch_size): #输入张量
+def data_iter(data,labels,batch_size=100): #输入张量
     data_set = TensorDataset(torch.FloatTensor(data),torch.LongTensor(labels))
     data_loader = DataLoader(data_set,batch_size=batch_size,shuffle=True)
     return iter(data_loader)
